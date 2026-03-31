@@ -129,6 +129,7 @@ function loadWeather() {
         document.getElementById("temp").innerHTML = data.temp + "°";
         document.getElementById("desc").innerHTML = data.desc;
         document.getElementById("hilo").innerHTML = "High " + data.high + "° / Low " + data.low + "°";
+        document.getElementById("location").innerHTML = data.location;
 
         document.getElementById("day1").innerHTML =
           data.days[0].name + "  " + data.days[0].high + "° / " + data.days[0].low + "°";
