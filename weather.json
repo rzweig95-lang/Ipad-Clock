@@ -1,0 +1,13 @@
+{
+"temp":58,
+"desc":"Partly cloudy",
+"high":62,
+"low":44,
+
+"days":[
+{"name":"Tue","high":62,"low":44},
+{"name":"Wed","high":65,"low":48},
+{"name":"Thu","high":67,"low":50}
+]
+
+}
