@@ -31,6 +31,7 @@ jobs:
               f"?latitude={LAT}"
               f"&longitude={LON}"
               "&current=temperature_2m,weather_code"
+              "&timezone=America/New_York"
               "&daily=weather_code,temperature_2m_max,temperature_2m_min"
               "&temperature_unit=fahrenheit"
               "&timezone=auto"
@@ -81,6 +82,7 @@ jobs:
           daily = data["daily"]
 
           out = {
+              "location": "Valencia, PA",
               "temp": round(current["temperature_2m"]),
               "desc": code_to_text(current["weather_code"]),
               "high": round(daily["temperature_2m_max"][0]),
