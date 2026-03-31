@@ -30,7 +30,7 @@ jobs:
               f"?latitude={LAT}"
               f"&longitude={LON}"
               "&current=temperature_2m,weather_code"
-              "&daily=weather_code,temperature_2m_max,temperature_2m_min"
+              "&daily=time,weather_code,temperature_2m_max,temperature_2m_min"
               "&temperature_unit=fahrenheit"
               "&timezone=auto"
               "&forecast_days=4"
@@ -80,19 +80,25 @@ jobs:
               "desc": code_to_text(current["weather_code"]),
               "high": round(daily["temperature_2m_max"][0]),
               "low": round(daily["temperature_2m_min"][0]),
+              from datetime import datetime
+
+              def short_day_label(date_str):
+                  dt = datetime.strptime(date_str, "%Y-%m-%d")
+                  return dt.strftime("%a")
+              
               "days": [
                   {
-                      "name": "Tomorrow",
+                      "name": short_day_label(daily["time"][1]),
                       "high": round(daily["temperature_2m_max"][1]),
                       "low": round(daily["temperature_2m_min"][1]),
                   },
                   {
-                      "name": "Day 2",
+                      "name": short_day_label(daily["time"][2]),
                       "high": round(daily["temperature_2m_max"][2]),
                       "low": round(daily["temperature_2m_min"][2]),
                   },
                   {
-                      "name": "Day 3",
+                      "name": short_day_label(daily["time"][3]),
                       "high": round(daily["temperature_2m_max"][3]),
                       "low": round(daily["temperature_2m_min"][3]),
                   },
