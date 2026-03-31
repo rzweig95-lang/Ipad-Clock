@@ -931,8 +931,8 @@
         xhr.send();
       }
 
-      enableWeatherBtn.onclick = function () {
-        requestLocationAndWeather();
+            enableWeatherBtn.onclick = function () {
+        geocodeManualLocation(manualLocationInput.value.replace(/^\s+|\s+$/g, ''));
       };
 
       manualLocationBtn.onclick = function () {
@@ -949,6 +949,10 @@
       updateClock();
       setInterval(updateClock, 1000);
 
+      var DEFAULT_LAT = 40.674400;
+      var DEFAULT_LON = -79.989082;
+      var DEFAULT_LABEL = 'Pittsburgh, PA';
+
       var savedLocation = loadSavedLocationMode();
       if (savedLocation && savedLocation.lat != null && savedLocation.lon != null) {
         hideWeatherControls();
@@ -959,19 +963,29 @@
         } else {
           fetchWeather(savedLocation.lat, savedLocation.lon, false);
         }
+      } else {
+        weatherLocationEl.innerHTML = DEFAULT_LABEL;
+        hideWeatherControls();
+        saveLocationMode({
+          type: 'manual',
+          query: DEFAULT_LABEL,
+          lat: DEFAULT_LAT,
+          lon: DEFAULT_LON,
+          label: DEFAULT_LABEL
+        });
+        fetchWeather(DEFAULT_LAT, DEFAULT_LON, true);
       }
 
       setInterval(function () {
         var currentSavedLocation = loadSavedLocationMode();
         if (currentSavedLocation && currentSavedLocation.lat != null && currentSavedLocation.lon != null) {
-          if (currentSavedLocation.type === 'manual') {
-            fetchWeather(currentSavedLocation.lat, currentSavedLocation.lon, true);
-          } else {
-            fetchWeather(currentSavedLocation.lat, currentSavedLocation.lon, false);
-          }
+          weatherLocationEl.innerHTML = currentSavedLocation.label || currentSavedLocation.query || 'Saved Location';
+          fetchWeather(currentSavedLocation.lat, currentSavedLocation.lon, true);
+        } else {
+          weatherLocationEl.innerHTML = DEFAULT_LABEL;
+          fetchWeather(DEFAULT_LAT, DEFAULT_LON, true);
         }
       }, 10 * 60 * 1000);
-    })();
   </script>
 </body>
 </html>
