@@ -31,7 +31,7 @@ jobs:
               f"?latitude={LAT}"
               f"&longitude={LON}"
               "&current=temperature_2m,weather_code"
-              "&timezone=America/New_York"
+              "&timezone=auto"
               "&daily=weather_code,temperature_2m_max,temperature_2m_min"
               "&temperature_unit=fahrenheit"
               "&timezone=auto"
