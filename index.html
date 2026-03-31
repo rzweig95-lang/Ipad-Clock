@@ -236,6 +236,42 @@
       -webkit-backdrop-filter: blur(10px);
     }
 
+    .weather-controls {
+      margin-bottom: 14px;
+      text-align: center;
+    }
+
+    .weather-btn {
+      font-size: 20px;
+      padding: 12px 18px;
+      border-radius: 14px;
+      border: 1px solid rgba(255,255,255,0.2);
+      background: rgba(255,255,255,0.12);
+      color: #fff;
+      cursor: pointer;
+    }
+
+    .weather-btn.small-btn {
+      font-size: 18px;
+      padding: 10px 14px;
+      margin-left: 8px;
+      border-radius: 12px;
+    }
+
+    .manual-input-wrap {
+      margin-top: 10px;
+    }
+
+    .manual-location-input {
+      width: 70%;
+      max-width: 320px;
+      font-size: 18px;
+      padding: 10px 12px;
+      border-radius: 12px;
+      border: none;
+      outline: none;
+    }
+
     .weather-main {
       font-size: 58px;
       font-weight: bold;
@@ -369,31 +405,39 @@
     <div id="bgDecor" class="bg-layer"></div>
 
     <div class="content">
-    <div id="date" class="date">Loading date...</div>
-    <div id="time" class="time">--:--</div>
+      <div id="date" class="date">Loading date...</div>
+      <div id="time" class="time">--:--</div>
 
-    <div class="weather-box">
-      <div class="weather-top">
-        <div class="weather-top-left">
-          <div id="weatherLocation" class="weather-desc">My Location</div>
-          <div id="weatherMain" class="weather-main">Loading weather...</div>
-          <div id="weatherDesc" class="weather-desc">Please allow location access in Safari.</div>
-          <div id="weatherDetails" class="weather-details"></div>
+      <div class="weather-box">
+        <div id="weatherControls" class="weather-controls">
+          <button id="enableWeatherBtn" class="weather-btn">Enable Weather</button>
+          <div class="manual-input-wrap">
+            <input id="manualLocationInput" class="manual-location-input" type="text" placeholder="Or enter ZIP code or city" />
+            <button id="manualLocationBtn" class="weather-btn small-btn">Use</button>
+          </div>
         </div>
-        <div class="weather-top-right">
-          <div id="weatherIcon" class="weather-icon">☁️</div>
+
+        <div class="weather-top">
+          <div class="weather-top-left">
+            <div id="weatherLocation" class="weather-desc">My Location</div>
+            <div id="weatherMain" class="weather-main">Loading weather...</div>
+            <div id="weatherDesc" class="weather-desc">Tap Enable Weather or enter a ZIP code/city.</div>
+            <div id="weatherDetails" class="weather-details"></div>
+          </div>
+          <div class="weather-top-right">
+            <div id="weatherIcon" class="weather-icon">☁️</div>
+          </div>
+        </div>
+
+        <div id="weatherPrediction" class="prediction"></div>
+
+        <div class="hourly-wrap">
+          <div class="hourly-title">Hourly Forecast</div>
+          <div id="hourlyRow" class="hourly-row"></div>
         </div>
       </div>
 
-      <div id="weatherPrediction" class="prediction"></div>
-
-      <div class="hourly-wrap">
-        <div class="hourly-title">Hourly Forecast</div>
-        <div id="hourlyRow" class="hourly-row"></div>
-      </div>
-    </div>
-
-    <div id="footer" class="footer">Weather updates every 10 minutes</div>
+      <div id="footer" class="footer">Weather updates every 10 minutes</div>
     </div>
   </div>
 
@@ -405,8 +449,15 @@
       var bgSnowEl = document.getElementById('bgSnow');
       var bgNightEl = document.getElementById('bgNight');
       var bgDecorEl = document.getElementById('bgDecor');
+
       var dateEl = document.getElementById('date');
       var timeEl = document.getElementById('time');
+
+      var weatherControlsEl = document.getElementById('weatherControls');
+      var enableWeatherBtn = document.getElementById('enableWeatherBtn');
+      var manualLocationInput = document.getElementById('manualLocationInput');
+      var manualLocationBtn = document.getElementById('manualLocationBtn');
+
       var weatherLocationEl = document.getElementById('weatherLocation');
       var weatherMainEl = document.getElementById('weatherMain');
       var weatherDescEl = document.getElementById('weatherDesc');
@@ -434,11 +485,11 @@
         var now = new Date();
         var hours = now.getHours();
         var minutes = now.getMinutes();
+        var seconds = now.getSeconds();
         var ampm = hours >= 12 ? 'PM' : 'AM';
         var displayHour = hours % 12;
         if (displayHour === 0) displayHour = 12;
 
-        var seconds = now.getSeconds();
         timeEl.innerHTML = displayHour + ':' + pad(minutes) + ':' + pad(seconds) + ' <span class="small">' + ampm + '</span>';
         dateEl.innerHTML = weekdayName(now.getDay()) + ', ' + monthName(now.getMonth()) + ' ' + now.getDate();
       }
@@ -505,67 +556,6 @@
         return dirs[Math.round(deg / 45) % 8];
       }
 
-      function setWeatherError(message) {
-        weatherMainEl.innerHTML = 'Weather unavailable';
-        weatherDescEl.innerHTML = message;
-        weatherDescEl.className = 'weather-desc error';
-        weatherDetailsEl.innerHTML = 'Check Safari location permissions and internet connection.';
-        weatherPredictionEl.innerHTML = '';
-        weatherIconEl.innerHTML = '☁️';
-        hourlyRowEl.innerHTML = '';
-      }
-
-      function fetchWeather(lat, lon) {
-        var weatherUrl = 'https://api.open-meteo.com/v1/forecast?latitude=' + encodeURIComponent(lat) +
-          '&longitude=' + encodeURIComponent(lon) +
-          '&current=temperature_2m,apparent_temperature,is_day,weather_code,wind_speed_10m,wind_direction_10m' +
-          '&hourly=temperature_2m,weather_code,precipitation_probability,is_day' +
-          '&daily=weather_code,temperature_2m_max,temperature_2m_min,sunrise,sunset,precipitation_probability_max' +
-          '&forecast_days=2&temperature_unit=fahrenheit&wind_speed_unit=mph&timezone=auto';
-
-        var geoUrl = 'https://geocoding-api.open-meteo.com/v1/reverse?latitude=' + encodeURIComponent(lat) +
-          '&longitude=' + encodeURIComponent(lon) + '&language=en&format=json';
-
-        var weatherXhr = new XMLHttpRequest();
-        weatherXhr.open('GET', weatherUrl, true);
-        weatherXhr.onreadystatechange = function () {
-          if (weatherXhr.readyState !== 4) return;
-
-          if (weatherXhr.status >= 200 && weatherXhr.status < 300) {
-            try {
-              var data = JSON.parse(weatherXhr.responseText);
-              renderWeather(data);
-            } catch (e) {
-              setWeatherError('Could not read weather data.');
-            }
-          } else {
-            setWeatherError('Could not load weather data.');
-          }
-        };
-        weatherXhr.onerror = function () {
-          setWeatherError('Network error while loading weather.');
-        };
-        weatherXhr.send();
-
-        var geoXhr = new XMLHttpRequest();
-        geoXhr.open('GET', geoUrl, true);
-        geoXhr.onreadystatechange = function () {
-          if (geoXhr.readyState !== 4) return;
-          if (geoXhr.status >= 200 && geoXhr.status < 300) {
-            try {
-              var geoData = JSON.parse(geoXhr.responseText);
-              if (geoData && geoData.results && geoData.results.length) {
-                var place = geoData.results[0];
-                var name = place.name || '';
-                var admin = place.admin1 || '';
-                weatherLocationEl.innerHTML = name && admin ? name + ', ' + admin : (name || admin || 'My Location');
-              }
-            } catch (e) {}
-          }
-        };
-        geoXhr.send();
-      }
-
       function shortTime(isoString) {
         if (!isoString) return '--';
         var d = new Date(isoString);
@@ -575,6 +565,40 @@
         var dh = h % 12;
         if (dh === 0) dh = 12;
         return dh + ':' + pad(m) + ' ' + ampm;
+      }
+
+      function hideWeatherControls() {
+        weatherControlsEl.style.display = 'none';
+      }
+
+      function showWeatherControls() {
+        weatherControlsEl.style.display = 'block';
+      }
+
+      function saveLocationMode(data) {
+        try {
+          localStorage.setItem('clockWeatherLocationMode', JSON.stringify(data));
+        } catch (e) {}
+      }
+
+      function loadSavedLocationMode() {
+        try {
+          var raw = localStorage.getItem('clockWeatherLocationMode');
+          return raw ? JSON.parse(raw) : null;
+        } catch (e) {
+          return null;
+        }
+      }
+
+      function setWeatherError(message) {
+        weatherMainEl.innerHTML = 'Weather unavailable';
+        weatherDescEl.innerHTML = message;
+        weatherDescEl.className = 'weather-desc error';
+        weatherDetailsEl.innerHTML = 'Tap Enable Weather or enter a ZIP code/city.';
+        weatherPredictionEl.innerHTML = '';
+        weatherIconEl.innerHTML = '☁️';
+        hourlyRowEl.innerHTML = '';
+        showWeatherControls();
       }
 
       function clearActiveBackgrounds() {
@@ -663,6 +687,55 @@
         }
       }
 
+      function renderHourly(hourly) {
+        if (!hourly || !hourly.time || !hourly.temperature_2m || !hourly.weather_code) {
+          hourlyRowEl.innerHTML = '';
+          return;
+        }
+
+        var now = new Date();
+        var startIndex = 0;
+        var i;
+
+        for (i = 0; i < hourly.time.length; i++) {
+          var hourDate = new Date(hourly.time[i]);
+          if (hourDate >= now) {
+            startIndex = i;
+            break;
+          }
+        }
+
+        var html = '';
+        var endIndex = Math.min(startIndex + 8, hourly.time.length);
+
+        for (i = startIndex; i < endIndex; i++) {
+          var d = new Date(hourly.time[i]);
+          var h = d.getHours();
+          var label;
+
+          if (i === startIndex) {
+            label = 'Now';
+          } else {
+            var dh = h % 12;
+            if (dh === 0) dh = 12;
+            label = dh + (h >= 12 ? 'PM' : 'AM');
+          }
+
+          var icon = weatherCodeToIcon(hourly.weather_code[i], hourly.is_day && hourly.is_day[i] === 1);
+          var temp = Math.round(hourly.temperature_2m[i]);
+          var rain = hourly.precipitation_probability && hourly.precipitation_probability[i] != null ? Math.round(hourly.precipitation_probability[i]) : null;
+
+          html += '<div class="hour-card">' +
+            '<div class="hour-time">' + escapeHtml(label) + '</div>' +
+            '<div class="hour-icon">' + escapeHtml(icon) + '</div>' +
+            '<div class="hour-temp">' + temp + '&deg;</div>' +
+            '<div class="hour-rain">' + (rain !== null ? rain + '%' : '') + '</div>' +
+          '</div>';
+        }
+
+        hourlyRowEl.innerHTML = html;
+      }
+
       function renderWeather(data) {
         if (!data || !data.current || !data.daily) {
           setWeatherError('Incomplete weather data received.');
@@ -686,6 +759,7 @@
         weatherDescEl.innerHTML = desc;
         weatherIconEl.innerHTML = weatherCodeToIcon(current.weather_code, isDay);
         setAnimatedBackground(current.weather_code, isDay);
+
         weatherDetailsEl.innerHTML =
           'H:' + hi + '&deg;  L:' + lo + '&deg;<br>' +
           'Feels like ' + Math.round(current.apparent_temperature) + '&deg;F<br>' +
@@ -717,52 +791,58 @@
         footerEl.innerHTML = 'Weather updates every 10 minutes';
       }
 
-      function renderHourly(hourly) {
-        if (!hourly || !hourly.time || !hourly.temperature_2m || !hourly.weather_code) {
-          hourlyRowEl.innerHTML = '';
-          return;
-        }
+      function fetchWeather(lat, lon, skipReverseGeocode) {
+        var weatherUrl = 'https://api.open-meteo.com/v1/forecast?latitude=' + encodeURIComponent(lat) +
+          '&longitude=' + encodeURIComponent(lon) +
+          '&current=temperature_2m,apparent_temperature,is_day,weather_code,wind_speed_10m,wind_direction_10m' +
+          '&hourly=temperature_2m,weather_code,precipitation_probability,is_day' +
+          '&daily=weather_code,temperature_2m_max,temperature_2m_min,sunrise,sunset,precipitation_probability_max' +
+          '&forecast_days=2&temperature_unit=fahrenheit&wind_speed_unit=mph&timezone=auto';
 
-        var now = new Date();
-        var startIndex = 0;
-        var i;
+        var weatherXhr = new XMLHttpRequest();
+        weatherXhr.open('GET', weatherUrl, true);
+        weatherXhr.onreadystatechange = function () {
+          if (weatherXhr.readyState !== 4) return;
 
-        for (i = 0; i < hourly.time.length; i++) {
-          var hourDate = new Date(hourly.time[i]);
-          if (hourDate >= now) {
-            startIndex = i;
-            break;
-          }
-        }
-
-        var html = '';
-        var endIndex = Math.min(startIndex + 8, hourly.time.length);
-
-        for (i = startIndex; i < endIndex; i++) {
-          var d = new Date(hourly.time[i]);
-          var h = d.getHours();
-          var label;
-          if (i === startIndex) {
-            label = 'Now';
+          if (weatherXhr.status >= 200 && weatherXhr.status < 300) {
+            try {
+              var data = JSON.parse(weatherXhr.responseText);
+              renderWeather(data);
+            } catch (e) {
+              setWeatherError('Could not read weather data.');
+            }
           } else {
-            var dh = h % 12;
-            if (dh === 0) dh = 12;
-            label = dh + (h >= 12 ? 'PM' : 'AM');
+            setWeatherError('Could not load weather data.');
           }
+        };
+        weatherXhr.onerror = function () {
+          setWeatherError('Network error while loading weather.');
+        };
+        weatherXhr.send();
 
-          var icon = weatherCodeToIcon(hourly.weather_code[i], hourly.is_day && hourly.is_day[i] === 1);
-          var temp = Math.round(hourly.temperature_2m[i]);
-          var rain = hourly.precipitation_probability && hourly.precipitation_probability[i] != null ? Math.round(hourly.precipitation_probability[i]) : null;
+        if (skipReverseGeocode) return;
 
-          html += '<div class="hour-card">' +
-            '<div class="hour-time">' + escapeHtml(label) + '</div>' +
-            '<div class="hour-icon">' + escapeHtml(icon) + '</div>' +
-            '<div class="hour-temp">' + temp + '&deg;</div>' +
-            '<div class="hour-rain">' + (rain !== null ? rain + '%' : '') + '</div>' +
-          '</div>';
-        }
+        var geoUrl = 'https://geocoding-api.open-meteo.com/v1/reverse?latitude=' + encodeURIComponent(lat) +
+          '&longitude=' + encodeURIComponent(lon) + '&language=en&format=json';
 
-        hourlyRowEl.innerHTML = html;
+        var geoXhr = new XMLHttpRequest();
+        geoXhr.open('GET', geoUrl, true);
+        geoXhr.onreadystatechange = function () {
+          if (geoXhr.readyState !== 4) return;
+
+          if (geoXhr.status >= 200 && geoXhr.status < 300) {
+            try {
+              var geoData = JSON.parse(geoXhr.responseText);
+              if (geoData && geoData.results && geoData.results.length) {
+                var place = geoData.results[0];
+                var name = place.name || '';
+                var admin = place.admin1 || '';
+                weatherLocationEl.innerHTML = name && admin ? name + ', ' + admin : (name || admin || 'My Location');
+              }
+            } catch (e) {}
+          }
+        };
+        geoXhr.send();
       }
 
       function requestLocationAndWeather() {
@@ -772,14 +852,18 @@
         }
 
         weatherMainEl.innerHTML = 'Finding location...';
+        weatherDescEl.className = 'weather-desc';
         weatherDescEl.innerHTML = 'Please allow location access in Safari.';
         weatherDetailsEl.innerHTML = '';
+        weatherPredictionEl.innerHTML = '';
 
         navigator.geolocation.getCurrentPosition(
           function (position) {
             var lat = position.coords.latitude;
             var lon = position.coords.longitude;
-            fetchWeather(lat, lon);
+            saveLocationMode({ type: 'gps', lat: lat, lon: lon });
+            hideWeatherControls();
+            fetchWeather(lat, lon, false);
           },
           function () {
             setWeatherError('Location permission was denied or unavailable.');
@@ -792,13 +876,102 @@
         );
       }
 
+      function geocodeManualLocation(query) {
+        if (!query) {
+          setWeatherError('Enter a ZIP code or city first.');
+          return;
+        }
+
+        weatherMainEl.innerHTML = 'Finding location...';
+        weatherDescEl.className = 'weather-desc';
+        weatherDescEl.innerHTML = 'Looking up ' + query + '...';
+        weatherDetailsEl.innerHTML = '';
+        weatherPredictionEl.innerHTML = '';
+
+        var url = 'https://geocoding-api.open-meteo.com/v1/search?name=' + encodeURIComponent(query) + '&count=1&language=en&format=json';
+
+        var xhr = new XMLHttpRequest();
+        xhr.open('GET', url, true);
+        xhr.onreadystatechange = function () {
+          if (xhr.readyState !== 4) return;
+
+          if (xhr.status >= 200 && xhr.status < 300) {
+            try {
+              var data = JSON.parse(xhr.responseText);
+              if (data && data.results && data.results.length) {
+                var place = data.results[0];
+                var label = (place.name || query) + (place.admin1 ? ', ' + place.admin1 : '');
+                weatherLocationEl.innerHTML = label;
+
+                saveLocationMode({
+                  type: 'manual',
+                  query: query,
+                  lat: place.latitude,
+                  lon: place.longitude,
+                  label: label
+                });
+
+                hideWeatherControls();
+                fetchWeather(place.latitude, place.longitude, true);
+              } else {
+                setWeatherError('Could not find that ZIP code or city.');
+              }
+            } catch (e) {
+              setWeatherError('Could not read location lookup data.');
+            }
+          } else {
+            setWeatherError('Could not look up that location.');
+          }
+        };
+
+        xhr.onerror = function () {
+          setWeatherError('Network error while looking up location.');
+        };
+
+        xhr.send();
+      }
+
+      enableWeatherBtn.onclick = function () {
+        requestLocationAndWeather();
+      };
+
+      manualLocationBtn.onclick = function () {
+        geocodeManualLocation(manualLocationInput.value.replace(/^\s+|\s+$/g, ''));
+      };
+
+      manualLocationInput.onkeydown = function (e) {
+        e = e || window.event;
+        if (e.keyCode === 13) {
+          geocodeManualLocation(manualLocationInput.value.replace(/^\s+|\s+$/g, ''));
+        }
+      };
+
       updateClock();
       setInterval(updateClock, 1000);
 
-      requestLocationAndWeather();
-      setInterval(requestLocationAndWeather, 10 * 60 * 1000);
+      var savedLocation = loadSavedLocationMode();
+      if (savedLocation && savedLocation.lat != null && savedLocation.lon != null) {
+        hideWeatherControls();
+
+        if (savedLocation.type === 'manual') {
+          weatherLocationEl.innerHTML = savedLocation.label || savedLocation.query || 'Saved Location';
+          fetchWeather(savedLocation.lat, savedLocation.lon, true);
+        } else {
+          fetchWeather(savedLocation.lat, savedLocation.lon, false);
+        }
+      }
+
+      setInterval(function () {
+        var currentSavedLocation = loadSavedLocationMode();
+        if (currentSavedLocation && currentSavedLocation.lat != null && currentSavedLocation.lon != null) {
+          if (currentSavedLocation.type === 'manual') {
+            fetchWeather(currentSavedLocation.lat, currentSavedLocation.lon, true);
+          } else {
+            fetchWeather(currentSavedLocation.lat, currentSavedLocation.lon, false);
+          }
+        }
+      }, 10 * 60 * 1000);
     })();
   </script>
 </body>
 </html>
-
