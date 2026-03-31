@@ -5,17 +5,17 @@
   "low": 50,
   "days": [
     {
-      "name": "Tomorrow",
+      "name": "Tue",
       "high": 76,
       "low": 59
     },
     {
-      "name": "Day 2",
+      "name": "Wed",
       "high": 66,
       "low": 55
     },
     {
-      "name": "Day 3",
+      "name": "Thu",
       "high": 76,
       "low": 54
     }
