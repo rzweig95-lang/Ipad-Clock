@@ -278,8 +278,33 @@ hourlyRowEl.innerHTML=html;
 updateClock();
 setInterval(updateClock,1000);
 
-fetchWeather();
-setInterval(fetchWeather,10*60*1000);
+renderWeather({
+  current: {
+    temperature_2m: 58,
+    apparent_temperature: 56,
+    is_day: 1,
+    weather_code: 2,
+    wind_speed_10m: 7,
+    wind_direction_10m: 180
+  },
+  daily: {
+    temperature_2m_max: [62],
+    temperature_2m_min: [44],
+    sunrise: ['2026-03-30T07:02'],
+    sunset: ['2026-03-30T19:34'],
+    precipitation_probability_max: [20]
+  },
+  hourly: {
+    time: [
+      '2026-03-30T10:00','2026-03-30T11:00','2026-03-30T12:00','2026-03-30T13:00',
+      '2026-03-30T14:00','2026-03-30T15:00','2026-03-30T16:00','2026-03-30T17:00'
+    ],
+    temperature_2m: [56,57,58,60,61,61,59,57],
+    weather_code: [2,2,1,1,2,3,3,2],
+    precipitation_probability: [10,10,5,5,10,15,20,15],
+    is_day: [1,1,1,1,1,1,1,1]
+  }
+});
 
 })();
 
