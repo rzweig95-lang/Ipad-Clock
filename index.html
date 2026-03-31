@@ -1,0 +1,803 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>iPad Clock + Weather</title>
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100%;
+      background: #0f172a;
+      color: #ffffff;
+      font-family: Arial, Helvetica, sans-serif;
+      overflow: hidden;
+    }
+
+    body {
+      display: table;
+      width: 100%;
+      height: 100%;
+    }
+
+    .screen {
+      display: table-cell;
+      vertical-align: middle;
+      text-align: center;
+      padding: 18px;
+      box-sizing: border-box;
+      background: linear-gradient(to bottom, #0f172a 0%, #1e293b 100%);
+      position: relative;
+    }
+
+    .bg-layer {
+      position: absolute;
+      inset: 0;
+      overflow: hidden;
+      pointer-events: none;
+    }
+
+    .sky-day {
+      background: linear-gradient(to bottom, #4da3ff 0%, #7fc4ff 42%, #d7ecff 100%);
+    }
+
+    .sky-night {
+      background: linear-gradient(to bottom, #091225 0%, #16213e 45%, #22345f 100%);
+    }
+
+    .sky-cloudy {
+      background: linear-gradient(to bottom, #596579 0%, #7b889d 45%, #b7c1cf 100%);
+    }
+
+    .sky-rain {
+      background: linear-gradient(to bottom, #2b3445 0%, #4b5a73 55%, #73839a 100%);
+    }
+
+    .sky-snow {
+      background: linear-gradient(to bottom, #8294ad 0%, #a7b6c8 50%, #dbe5f0 100%);
+    }
+
+    .bg-fill {
+      position: absolute;
+      inset: 0;
+      opacity: 0;
+      transition: opacity 1.8s ease;
+    }
+
+    .bg-fill.active {
+      opacity: 1;
+    }
+
+    .sun {
+      position: absolute;
+      top: 55px;
+      right: 80px;
+      width: 110px;
+      height: 110px;
+      border-radius: 50%;
+      background: rgba(255, 222, 120, 0.95);
+      box-shadow: 0 0 40px rgba(255, 210, 120, 0.85), 0 0 90px rgba(255, 210, 120, 0.45);
+      animation: floatSun 12s ease-in-out infinite;
+    }
+
+    .moon {
+      position: absolute;
+      top: 55px;
+      right: 85px;
+      width: 90px;
+      height: 90px;
+      border-radius: 50%;
+      background: rgba(240, 244, 255, 0.95);
+      box-shadow: 0 0 30px rgba(240, 244, 255, 0.45);
+      animation: floatMoon 14s ease-in-out infinite;
+    }
+
+    .moon:after {
+      content: '';
+      position: absolute;
+      top: 10px;
+      left: 22px;
+      width: 78px;
+      height: 78px;
+      border-radius: 50%;
+      background: rgba(18, 31, 58, 0.95);
+    }
+
+    .cloud {
+      position: absolute;
+      width: 150px;
+      height: 50px;
+      background: rgba(255,255,255,0.42);
+      border-radius: 50px;
+      animation: driftCloud 36s linear infinite;
+    }
+
+    .cloud:before,
+    .cloud:after {
+      content: '';
+      position: absolute;
+      background: rgba(255,255,255,0.42);
+      border-radius: 50%;
+    }
+
+    .cloud:before {
+      width: 60px;
+      height: 60px;
+      left: 18px;
+      top: -24px;
+    }
+
+    .cloud:after {
+      width: 78px;
+      height: 78px;
+      right: 18px;
+      top: -36px;
+    }
+
+    .cloud.c1 { top: 90px; left: -180px; animation-duration: 42s; }
+    .cloud.c2 { top: 170px; left: -240px; transform: scale(0.8); animation-duration: 56s; opacity: 0.7; }
+    .cloud.c3 { top: 135px; left: -300px; transform: scale(1.15); animation-duration: 48s; opacity: 0.55; }
+
+    .rain-drop, .snow-flake, .star {
+      position: absolute;
+      opacity: 0.8;
+    }
+
+    .rain-drop {
+      width: 2px;
+      height: 18px;
+      background: rgba(200, 230, 255, 0.7);
+      animation: rainFall 1.3s linear infinite;
+    }
+
+    .snow-flake {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.88);
+      animation: snowFall 7s linear infinite;
+    }
+
+    .star {
+      width: 3px;
+      height: 3px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.95);
+      box-shadow: 0 0 8px rgba(255,255,255,0.65);
+      animation: twinkle 3s ease-in-out infinite;
+    }
+
+    .content {
+      position: relative;
+      z-index: 2;
+    }
+
+    @keyframes driftCloud {
+      from { transform: translateX(0); }
+      to { transform: translateX(980px); }
+    }
+
+    @keyframes rainFall {
+      from { transform: translateY(-40px); opacity: 0; }
+      10% { opacity: 0.8; }
+      to { transform: translateY(850px); opacity: 0; }
+    }
+
+    @keyframes snowFall {
+      from { transform: translateY(-30px) translateX(0); opacity: 0; }
+      10% { opacity: 0.9; }
+      50% { transform: translateY(360px) translateX(18px); }
+      to { transform: translateY(820px) translateX(-14px); opacity: 0; }
+    }
+
+    @keyframes twinkle {
+      0%, 100% { opacity: 0.25; transform: scale(1); }
+      50% { opacity: 1; transform: scale(1.6); }
+    }
+
+    @keyframes floatSun {
+      0%, 100% { transform: translateY(0px); }
+      50% { transform: translateY(8px); }
+    }
+
+    @keyframes floatMoon {
+      0%, 100% { transform: translateY(0px); }
+      50% { transform: translateY(10px); }
+    }
+
+    .date {
+      font-size: 30px;
+      opacity: 0.95;
+      margin-bottom: 10px;
+      letter-spacing: 1px;
+    }
+
+    .time {
+      font-size: 96px;
+      font-weight: bold;
+      line-height: 1;
+      margin: 8px 0 20px 0;
+      letter-spacing: 2px;
+    }
+
+    .weather-box {
+      width: 100%;
+      max-width: 700px;
+      margin: 0 auto;
+      background: rgba(255,255,255,0.12);
+      border: 1px solid rgba(255,255,255,0.16);
+      border-radius: 24px;
+      padding: 24px;
+      box-sizing: border-box;
+      box-shadow: 0 12px 40px rgba(0,0,0,0.22);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+    }
+
+    .weather-main {
+      font-size: 58px;
+      font-weight: bold;
+      margin-bottom: 4px;
+    }
+
+    .weather-desc {
+      font-size: 24px;
+      opacity: 0.95;
+      margin-bottom: 10px;
+    }
+
+    .weather-details {
+      font-size: 22px;
+      line-height: 1.6;
+      opacity: 0.92;
+    }
+
+    .footer {
+      margin-top: 18px;
+      font-size: 16px;
+      opacity: 0.72;
+    }
+
+    .weather-top {
+      display: table;
+      width: 100%;
+      margin-bottom: 14px;
+    }
+
+    .weather-top-left,
+    .weather-top-right {
+      display: table-cell;
+      vertical-align: middle;
+    }
+
+    .weather-top-right {
+      width: 120px;
+      text-align: center;
+    }
+
+    .weather-icon {
+      font-size: 68px;
+      line-height: 1;
+    }
+
+    .prediction {
+      margin-top: 12px;
+      font-size: 24px;
+      line-height: 1.5;
+      text-align: left;
+    }
+
+    .hourly-wrap {
+      margin-top: 18px;
+      padding-top: 16px;
+      border-top: 1px solid rgba(255,255,255,0.14);
+      text-align: left;
+    }
+
+    .hourly-title {
+      font-size: 18px;
+      opacity: 0.8;
+      margin-bottom: 12px;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+    }
+
+    .hourly-row {
+      white-space: nowrap;
+      overflow: hidden;
+      font-size: 0;
+    }
+
+    .hour-card {
+      display: inline-block;
+      width: 72px;
+      margin-right: 10px;
+      padding: 10px 6px;
+      border-radius: 16px;
+      background: rgba(255,255,255,0.08);
+      text-align: center;
+      vertical-align: top;
+      font-size: 16px;
+    }
+
+    .hour-time {
+      font-size: 15px;
+      opacity: 0.85;
+      margin-bottom: 6px;
+    }
+
+    .hour-icon {
+      font-size: 26px;
+      line-height: 1;
+      margin-bottom: 6px;
+    }
+
+    .hour-temp {
+      font-size: 18px;
+      font-weight: bold;
+      margin-bottom: 4px;
+    }
+
+    .hour-rain {
+      font-size: 13px;
+      opacity: 0.8;
+    }
+
+    .small {
+      font-size: 18px;
+    }
+
+    .error {
+      color: #fecaca;
+    }
+
+    .hidden {
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="screen">
+    <div id="bgDay" class="bg-layer bg-fill sky-day"></div>
+    <div id="bgCloudy" class="bg-layer bg-fill sky-cloudy"></div>
+    <div id="bgRain" class="bg-layer bg-fill sky-rain"></div>
+    <div id="bgSnow" class="bg-layer bg-fill sky-snow"></div>
+    <div id="bgNight" class="bg-layer bg-fill sky-night"></div>
+
+    <div id="bgDecor" class="bg-layer"></div>
+
+    <div class="content">
+    <div id="date" class="date">Loading date...</div>
+    <div id="time" class="time">--:--</div>
+
+    <div class="weather-box">
+      <div class="weather-top">
+        <div class="weather-top-left">
+          <div id="weatherLocation" class="weather-desc">My Location</div>
+          <div id="weatherMain" class="weather-main">Loading weather...</div>
+          <div id="weatherDesc" class="weather-desc">Please allow location access in Safari.</div>
+          <div id="weatherDetails" class="weather-details"></div>
+        </div>
+        <div class="weather-top-right">
+          <div id="weatherIcon" class="weather-icon">☁️</div>
+        </div>
+      </div>
+
+      <div id="weatherPrediction" class="prediction"></div>
+
+      <div class="hourly-wrap">
+        <div class="hourly-title">Hourly Forecast</div>
+        <div id="hourlyRow" class="hourly-row"></div>
+      </div>
+    </div>
+
+    <div id="footer" class="footer">Weather updates every 10 minutes</div>
+    </div>
+  </div>
+
+  <script>
+    (function () {
+      var bgDayEl = document.getElementById('bgDay');
+      var bgCloudyEl = document.getElementById('bgCloudy');
+      var bgRainEl = document.getElementById('bgRain');
+      var bgSnowEl = document.getElementById('bgSnow');
+      var bgNightEl = document.getElementById('bgNight');
+      var bgDecorEl = document.getElementById('bgDecor');
+      var dateEl = document.getElementById('date');
+      var timeEl = document.getElementById('time');
+      var weatherLocationEl = document.getElementById('weatherLocation');
+      var weatherMainEl = document.getElementById('weatherMain');
+      var weatherDescEl = document.getElementById('weatherDesc');
+      var weatherDetailsEl = document.getElementById('weatherDetails');
+      var weatherPredictionEl = document.getElementById('weatherPrediction');
+      var weatherIconEl = document.getElementById('weatherIcon');
+      var hourlyRowEl = document.getElementById('hourlyRow');
+      var footerEl = document.getElementById('footer');
+
+      function pad(n) {
+        return n < 10 ? '0' + n : '' + n;
+      }
+
+      function weekdayName(i) {
+        var names = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+        return names[i];
+      }
+
+      function monthName(i) {
+        var names = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+        return names[i];
+      }
+
+      function updateClock() {
+        var now = new Date();
+        var hours = now.getHours();
+        var minutes = now.getMinutes();
+        var ampm = hours >= 12 ? 'PM' : 'AM';
+        var displayHour = hours % 12;
+        if (displayHour === 0) displayHour = 12;
+
+        var seconds = now.getSeconds();
+        timeEl.innerHTML = displayHour + ':' + pad(minutes) + ':' + pad(seconds) + ' <span class="small">' + ampm + '</span>';
+        dateEl.innerHTML = weekdayName(now.getDay()) + ', ' + monthName(now.getMonth()) + ' ' + now.getDate();
+      }
+
+      function weatherCodeToText(code) {
+        var map = {
+          0: 'Clear sky',
+          1: 'Mostly clear',
+          2: 'Partly cloudy',
+          3: 'Overcast',
+          45: 'Fog',
+          48: 'Rime fog',
+          51: 'Light drizzle',
+          53: 'Drizzle',
+          55: 'Heavy drizzle',
+          56: 'Freezing drizzle',
+          57: 'Heavy freezing drizzle',
+          61: 'Light rain',
+          63: 'Rain',
+          65: 'Heavy rain',
+          66: 'Freezing rain',
+          67: 'Heavy freezing rain',
+          71: 'Light snow',
+          73: 'Snow',
+          75: 'Heavy snow',
+          77: 'Snow grains',
+          80: 'Rain showers',
+          81: 'Heavy rain showers',
+          82: 'Violent rain showers',
+          85: 'Snow showers',
+          86: 'Heavy snow showers',
+          95: 'Thunderstorm',
+          96: 'Thunderstorm with hail',
+          99: 'Severe thunderstorm with hail'
+        };
+        return map.hasOwnProperty(code) ? map[code] : 'Unknown conditions';
+      }
+
+      function weatherCodeToIcon(code, isDay) {
+        if (code === 0) return isDay ? '☀️' : '🌙';
+        if (code === 1) return isDay ? '🌤️' : '🌙';
+        if (code === 2) return '⛅';
+        if (code === 3) return '☁️';
+        if (code === 45 || code === 48) return '🌫️';
+        if (code === 51 || code === 53 || code === 55 || code === 56 || code === 57) return '🌦️';
+        if (code === 61 || code === 63 || code === 65 || code === 66 || code === 67 || code === 80 || code === 81 || code === 82) return '🌧️';
+        if (code === 71 || code === 73 || code === 75 || code === 77 || code === 85 || code === 86) return '❄️';
+        if (code === 95 || code === 96 || code === 99) return '⛈️';
+        return '☁️';
+      }
+
+      function escapeHtml(str) {
+        return String(str)
+          .replace(/&/g, '&amp;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;')
+          .replace(/"/g, '&quot;')
+          .replace(/'/g, '&#39;');
+      }
+
+      function windDirFromDegrees(deg) {
+        if (deg === null || typeof deg === 'undefined') return '';
+        var dirs = ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'];
+        return dirs[Math.round(deg / 45) % 8];
+      }
+
+      function setWeatherError(message) {
+        weatherMainEl.innerHTML = 'Weather unavailable';
+        weatherDescEl.innerHTML = message;
+        weatherDescEl.className = 'weather-desc error';
+        weatherDetailsEl.innerHTML = 'Check Safari location permissions and internet connection.';
+        weatherPredictionEl.innerHTML = '';
+        weatherIconEl.innerHTML = '☁️';
+        hourlyRowEl.innerHTML = '';
+      }
+
+      function fetchWeather(lat, lon) {
+        var weatherUrl = 'https://api.open-meteo.com/v1/forecast?latitude=' + encodeURIComponent(lat) +
+          '&longitude=' + encodeURIComponent(lon) +
+          '&current=temperature_2m,apparent_temperature,is_day,weather_code,wind_speed_10m,wind_direction_10m' +
+          '&hourly=temperature_2m,weather_code,precipitation_probability,is_day' +
+          '&daily=weather_code,temperature_2m_max,temperature_2m_min,sunrise,sunset,precipitation_probability_max' +
+          '&forecast_days=2&temperature_unit=fahrenheit&wind_speed_unit=mph&timezone=auto';
+
+        var geoUrl = 'https://geocoding-api.open-meteo.com/v1/reverse?latitude=' + encodeURIComponent(lat) +
+          '&longitude=' + encodeURIComponent(lon) + '&language=en&format=json';
+
+        var weatherXhr = new XMLHttpRequest();
+        weatherXhr.open('GET', weatherUrl, true);
+        weatherXhr.onreadystatechange = function () {
+          if (weatherXhr.readyState !== 4) return;
+
+          if (weatherXhr.status >= 200 && weatherXhr.status < 300) {
+            try {
+              var data = JSON.parse(weatherXhr.responseText);
+              renderWeather(data);
+            } catch (e) {
+              setWeatherError('Could not read weather data.');
+            }
+          } else {
+            setWeatherError('Could not load weather data.');
+          }
+        };
+        weatherXhr.onerror = function () {
+          setWeatherError('Network error while loading weather.');
+        };
+        weatherXhr.send();
+
+        var geoXhr = new XMLHttpRequest();
+        geoXhr.open('GET', geoUrl, true);
+        geoXhr.onreadystatechange = function () {
+          if (geoXhr.readyState !== 4) return;
+          if (geoXhr.status >= 200 && geoXhr.status < 300) {
+            try {
+              var geoData = JSON.parse(geoXhr.responseText);
+              if (geoData && geoData.results && geoData.results.length) {
+                var place = geoData.results[0];
+                var name = place.name || '';
+                var admin = place.admin1 || '';
+                weatherLocationEl.innerHTML = name && admin ? name + ', ' + admin : (name || admin || 'My Location');
+              }
+            } catch (e) {}
+          }
+        };
+        geoXhr.send();
+      }
+
+      function shortTime(isoString) {
+        if (!isoString) return '--';
+        var d = new Date(isoString);
+        var h = d.getHours();
+        var m = d.getMinutes();
+        var ampm = h >= 12 ? 'PM' : 'AM';
+        var dh = h % 12;
+        if (dh === 0) dh = 12;
+        return dh + ':' + pad(m) + ' ' + ampm;
+      }
+
+      function clearActiveBackgrounds() {
+        bgDayEl.className = 'bg-layer bg-fill sky-day';
+        bgCloudyEl.className = 'bg-layer bg-fill sky-cloudy';
+        bgRainEl.className = 'bg-layer bg-fill sky-rain';
+        bgSnowEl.className = 'bg-layer bg-fill sky-snow';
+        bgNightEl.className = 'bg-layer bg-fill sky-night';
+      }
+
+      function makeStars(count) {
+        var html = '';
+        var i;
+        for (i = 0; i < count; i++) {
+          html += '<div class="star" style="left:' + Math.round(Math.random() * 95) + '%; top:' + Math.round(Math.random() * 45) + '%; animation-delay:' + (Math.random() * 3).toFixed(2) + 's;"></div>';
+        }
+        return html;
+      }
+
+      function makeRain(count) {
+        var html = '<div class="cloud c1"></div><div class="cloud c2"></div><div class="cloud c3"></div>';
+        var i;
+        for (i = 0; i < count; i++) {
+          html += '<div class="rain-drop" style="left:' + Math.round(Math.random() * 100) + '%; top:' + Math.round(Math.random() * 25) + '%; animation-delay:' + (Math.random() * 1.2).toFixed(2) + 's; animation-duration:' + (0.9 + Math.random() * 0.8).toFixed(2) + 's;"></div>';
+        }
+        return html;
+      }
+
+      function makeSnow(count) {
+        var html = '<div class="cloud c1"></div><div class="cloud c2"></div>';
+        var i;
+        for (i = 0; i < count; i++) {
+          html += '<div class="snow-flake" style="left:' + Math.round(Math.random() * 100) + '%; top:' + Math.round(Math.random() * 20) + '%; animation-delay:' + (Math.random() * 6).toFixed(2) + 's; animation-duration:' + (5 + Math.random() * 4).toFixed(2) + 's;"></div>';
+        }
+        return html;
+      }
+
+      function makeClouds(dayOrNight, includeSunOrMoon) {
+        var html = '';
+        if (includeSunOrMoon === 'sun') html += '<div class="sun"></div>';
+        if (includeSunOrMoon === 'moon') html += '<div class="moon"></div>';
+        html += '<div class="cloud c1"></div><div class="cloud c2"></div><div class="cloud c3"></div>';
+        if (dayOrNight === 'night') {
+          html += makeStars(24);
+        }
+        return html;
+      }
+
+      function setAnimatedBackground(code, isDay) {
+        clearActiveBackgrounds();
+        bgDecorEl.innerHTML = '';
+
+        var rainy = (code >= 51 && code <= 67) || (code >= 80 && code <= 82) || (code >= 95 && code <= 99);
+        var snowy = (code >= 71 && code <= 77) || code === 85 || code === 86;
+        var cloudy = code === 1 || code === 2 || code === 3 || code === 45 || code === 48;
+
+        if (!isDay) {
+          bgNightEl.className += ' active';
+          if (rainy) {
+            bgRainEl.className += ' active';
+            bgDecorEl.innerHTML = makeRain(55);
+          } else if (snowy) {
+            bgSnowEl.className += ' active';
+            bgDecorEl.innerHTML = makeSnow(34) + makeStars(16);
+          } else if (cloudy) {
+            bgCloudyEl.className += ' active';
+            bgDecorEl.innerHTML = makeClouds('night', 'moon');
+          } else {
+            bgDecorEl.innerHTML = makeClouds('night', 'moon');
+          }
+          return;
+        }
+
+        if (rainy) {
+          bgRainEl.className += ' active';
+          bgDecorEl.innerHTML = makeRain(60);
+        } else if (snowy) {
+          bgSnowEl.className += ' active';
+          bgDecorEl.innerHTML = makeSnow(36);
+        } else if (cloudy) {
+          bgCloudyEl.className += ' active';
+          bgDecorEl.innerHTML = makeClouds('day', 'sun');
+        } else {
+          bgDayEl.className += ' active';
+          bgDecorEl.innerHTML = '<div class="sun"></div><div class="cloud c1"></div><div class="cloud c2"></div>';
+        }
+      }
+
+      function renderWeather(data) {
+        if (!data || !data.current || !data.daily) {
+          setWeatherError('Incomplete weather data received.');
+          return;
+        }
+
+        var current = data.current;
+        var daily = data.daily;
+        var hourly = data.hourly || {};
+        var desc = weatherCodeToText(current.weather_code);
+        var windDir = windDirFromDegrees(current.wind_direction_10m);
+        var hi = daily.temperature_2m_max && daily.temperature_2m_max.length ? Math.round(daily.temperature_2m_max[0]) : '--';
+        var lo = daily.temperature_2m_min && daily.temperature_2m_min.length ? Math.round(daily.temperature_2m_min[0]) : '--';
+        var sunrise = daily.sunrise && daily.sunrise.length ? shortTime(daily.sunrise[0]) : '--';
+        var sunset = daily.sunset && daily.sunset.length ? shortTime(daily.sunset[0]) : '--';
+        var precip = daily.precipitation_probability_max && daily.precipitation_probability_max.length ? Math.round(daily.precipitation_probability_max[0]) : null;
+        var isDay = current.is_day === 1;
+
+        weatherDescEl.className = 'weather-desc';
+        weatherMainEl.innerHTML = Math.round(current.temperature_2m) + '&deg;F';
+        weatherDescEl.innerHTML = desc;
+        weatherIconEl.innerHTML = weatherCodeToIcon(current.weather_code, isDay);
+        setAnimatedBackground(current.weather_code, isDay);
+        weatherDetailsEl.innerHTML =
+          'H:' + hi + '&deg;  L:' + lo + '&deg;<br>' +
+          'Feels like ' + Math.round(current.apparent_temperature) + '&deg;F<br>' +
+          'Wind ' + Math.round(current.wind_speed_10m) + ' mph ' + windDir;
+
+        var prediction = 'Today: ' + desc + '. ';
+
+        if (precip !== null && precip >= 60) {
+          prediction += 'A good chance of precipitation is expected today. ';
+        } else if (precip !== null && precip >= 35) {
+          prediction += 'There is a chance of precipitation later today. ';
+        } else if (desc.indexOf('Thunderstorm') !== -1) {
+          prediction += 'Stormy weather is possible today. ';
+        } else if (desc.indexOf('rain') !== -1 || desc.indexOf('Rain') !== -1) {
+          prediction += 'Rain is expected today. ';
+        } else if (desc.indexOf('snow') !== -1 || desc.indexOf('Snow') !== -1) {
+          prediction += 'Snow is expected today. ';
+        } else if (desc.indexOf('cloud') !== -1 || desc.indexOf('Overcast') !== -1) {
+          prediction += 'Clouds will hang around for much of the day. ';
+        } else {
+          prediction += 'Conditions should stay fairly steady through the day. ';
+        }
+
+        prediction += 'The high will be ' + hi + '&deg; and the low will be ' + lo + '&deg;. ';
+        prediction += 'Sunrise is at ' + sunrise + ' and sunset is at ' + sunset + '.';
+
+        weatherPredictionEl.innerHTML = prediction;
+        renderHourly(hourly);
+        footerEl.innerHTML = 'Weather updates every 10 minutes';
+      }
+
+      function renderHourly(hourly) {
+        if (!hourly || !hourly.time || !hourly.temperature_2m || !hourly.weather_code) {
+          hourlyRowEl.innerHTML = '';
+          return;
+        }
+
+        var now = new Date();
+        var startIndex = 0;
+        var i;
+
+        for (i = 0; i < hourly.time.length; i++) {
+          var hourDate = new Date(hourly.time[i]);
+          if (hourDate >= now) {
+            startIndex = i;
+            break;
+          }
+        }
+
+        var html = '';
+        var endIndex = Math.min(startIndex + 8, hourly.time.length);
+
+        for (i = startIndex; i < endIndex; i++) {
+          var d = new Date(hourly.time[i]);
+          var h = d.getHours();
+          var label;
+          if (i === startIndex) {
+            label = 'Now';
+          } else {
+            var dh = h % 12;
+            if (dh === 0) dh = 12;
+            label = dh + (h >= 12 ? 'PM' : 'AM');
+          }
+
+          var icon = weatherCodeToIcon(hourly.weather_code[i], hourly.is_day && hourly.is_day[i] === 1);
+          var temp = Math.round(hourly.temperature_2m[i]);
+          var rain = hourly.precipitation_probability && hourly.precipitation_probability[i] != null ? Math.round(hourly.precipitation_probability[i]) : null;
+
+          html += '<div class="hour-card">' +
+            '<div class="hour-time">' + escapeHtml(label) + '</div>' +
+            '<div class="hour-icon">' + escapeHtml(icon) + '</div>' +
+            '<div class="hour-temp">' + temp + '&deg;</div>' +
+            '<div class="hour-rain">' + (rain !== null ? rain + '%' : '') + '</div>' +
+          '</div>';
+        }
+
+        hourlyRowEl.innerHTML = html;
+      }
+
+      function requestLocationAndWeather() {
+        if (!navigator.geolocation) {
+          setWeatherError('This browser does not support location services.');
+          return;
+        }
+
+        weatherMainEl.innerHTML = 'Finding location...';
+        weatherDescEl.innerHTML = 'Please allow location access in Safari.';
+        weatherDetailsEl.innerHTML = '';
+
+        navigator.geolocation.getCurrentPosition(
+          function (position) {
+            var lat = position.coords.latitude;
+            var lon = position.coords.longitude;
+            fetchWeather(lat, lon);
+          },
+          function () {
+            setWeatherError('Location permission was denied or unavailable.');
+          },
+          {
+            enableHighAccuracy: false,
+            timeout: 15000,
+            maximumAge: 1800000
+          }
+        );
+      }
+
+      updateClock();
+      setInterval(updateClock, 1000);
+
+      requestLocationAndWeather();
+      setInterval(requestLocationAndWeather, 10 * 60 * 1000);
+    })();
+  </script>
+</body>
+</html>
