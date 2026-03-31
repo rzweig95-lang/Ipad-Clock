@@ -1,158 +1,162 @@
 <!DOCTYPE html>
 <html>
 <head>
-
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black">
-
-<meta name="viewport" content="width=device-width, initial-scale=1">
-
 <title>Clock</title>
 
 <style>
-
-body{
-margin:0;
-background:#111;
-color:white;
-font-family:Arial;
-text-align:center;
+html, body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  background: #111;
+  color: #fff;
+  font-family: Arial, Helvetica, sans-serif;
+  overflow: hidden;
 }
 
-.container{
-position:absolute;
-top:50%;
-left:50%;
-transform:translate(-50%,-50%);
-width:90%;
+.wrapper {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 90%;
+  transform: translate(-50%, -50%);
+  text-align: center;
 }
 
-.time{
-font-size:120px;
-font-weight:bold;
+.time {
+  font-size: 110px;
+  font-weight: bold;
+  line-height: 1;
 }
 
-.date{
-font-size:30px;
-margin-top:10px;
-opacity:.8;
+.date {
+  font-size: 28px;
+  margin-top: 12px;
+  opacity: 0.85;
 }
 
-.weather{
-margin-top:40px;
-font-size:40px;
+.weather {
+  margin-top: 40px;
 }
 
-.small{
-font-size:22px;
-opacity:.8;
-margin-top:10px;
+.temp {
+  font-size: 54px;
+  font-weight: bold;
 }
 
-.forecast{
-margin-top:30px;
-font-size:24px;
+.desc, .hilo {
+  font-size: 24px;
+  margin-top: 10px;
+  opacity: 0.9;
 }
 
-.day{
-margin-top:8px;
+.forecast {
+  margin-top: 28px;
+  font-size: 22px;
+  line-height: 1.8;
 }
-
 </style>
-
 </head>
 
 <body>
+<div class="wrapper">
+  <div id="time" class="time">--:--</div>
+  <div id="date" class="date">Loading date...</div>
 
-<div class="container">
+  <div class="weather">
+    <div id="temp" class="temp">--°</div>
+    <div id="desc" class="desc">Loading weather...</div>
+    <div id="hilo" class="hilo"></div>
+  </div>
 
-<div id="time" class="time">--:--</div>
-
-<div id="date" class="date"></div>
-
-<div class="weather">
-
-<div id="temp">--°</div>
-
-<div id="desc" class="small">Loading weather...</div>
-
-<div id="hiLo" class="small"></div>
-
-</div>
-
-<div class="forecast">
-
-<div id="day1" class="day"></div>
-<div id="day2" class="day"></div>
-<div id="day3" class="day"></div>
-
-</div>
-
+  <div class="forecast">
+    <div id="day1"></div>
+    <div id="day2"></div>
+    <div id="day3"></div>
+  </div>
 </div>
 
 <script>
-
-function updateClock(){
-
-var now=new Date();
-
-var h=now.getHours();
-var m=now.getMinutes();
-
-var ampm=h>=12?"PM":"AM";
-
-var dh=h%12;
-if(dh===0) dh=12;
-
-if(m<10) m="0"+m;
-
-document.getElementById("time").innerHTML=dh+":"+m+" "+ampm;
-
-document.getElementById("date").innerHTML=
-now.toLocaleDateString(undefined,{
-weekday:'long',
-month:'long',
-day:'numeric'
-});
-
+function pad(n) {
+  return n < 10 ? "0" + n : "" + n;
 }
 
-function loadWeather(){
+function monthName(i) {
+  var months = [
+    "January","February","March","April","May","June",
+    "July","August","September","October","November","December"
+  ];
+  return months[i];
+}
 
-fetch("weather.json")
-.then(r=>r.json())
-.then(data=>{
+function dayName(i) {
+  var days = [
+    "Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"
+  ];
+  return days[i];
+}
 
-document.getElementById("temp").innerHTML=data.temp+"°";
+function updateClock() {
+  var now = new Date();
+  var h = now.getHours();
+  var m = now.getMinutes();
+  var ampm = h >= 12 ? "PM" : "AM";
+  var dh = h % 12;
+  if (dh === 0) dh = 12;
 
-document.getElementById("desc").innerHTML=data.desc;
+  document.getElementById("time").innerHTML = dh + ":" + pad(m) + " " + ampm;
+  document.getElementById("date").innerHTML =
+    dayName(now.getDay()) + ", " + monthName(now.getMonth()) + " " + now.getDate();
+}
 
-document.getElementById("hiLo").innerHTML=
-"High "+data.high+"° / Low "+data.low+"°";
+function loadWeather() {
+  var xhr = new XMLHttpRequest();
+  xhr.open("GET", "weather.json", true);
 
-document.getElementById("day1").innerHTML=
-data.days[0].name+" "+data.days[0].high+"°/"+data.days[0].low+"°";
+  xhr.onreadystatechange = function () {
+    if (xhr.readyState !== 4) return;
 
-document.getElementById("day2").innerHTML=
-data.days[1].name+" "+data.days[1].high+"°/"+data.days[1].low+"°";
+    if (xhr.status >= 200 && xhr.status < 300) {
+      try {
+        var data = JSON.parse(xhr.responseText);
 
-document.getElementById("day3").innerHTML=
-data.days[2].name+" "+data.days[2].high+"°/"+data.days[2].low+"°";
+        document.getElementById("temp").innerHTML = data.temp + "°";
+        document.getElementById("desc").innerHTML = data.desc;
+        document.getElementById("hilo").innerHTML = "High " + data.high + "° / Low " + data.low + "°";
 
-});
+        document.getElementById("day1").innerHTML =
+          data.days[0].name + "  " + data.days[0].high + "° / " + data.days[0].low + "°";
 
+        document.getElementById("day2").innerHTML =
+          data.days[1].name + "  " + data.days[1].high + "° / " + data.days[1].low + "°";
+
+        document.getElementById("day3").innerHTML =
+          data.days[2].name + "  " + data.days[2].high + "° / " + data.days[2].low + "°";
+      } catch (e) {
+        document.getElementById("desc").innerHTML = "Weather file error";
+      }
+    } else {
+      document.getElementById("desc").innerHTML = "Could not load weather.json";
+    }
+  };
+
+  xhr.onerror = function () {
+    document.getElementById("desc").innerHTML = "Weather load failed";
+  };
+
+  xhr.send();
 }
 
 updateClock();
-
-setInterval(updateClock,60000);
-
 loadWeather();
 
-setInterval(loadWeather,600000);
-
+setInterval(updateClock, 30000);
+setInterval(loadWeather, 600000);
 </script>
-
 </body>
-
 </html>
