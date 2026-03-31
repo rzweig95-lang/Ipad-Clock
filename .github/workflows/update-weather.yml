@@ -14,13 +14,14 @@ jobs:
 
     steps:
       - name: Check out repo
-        uses: actions/checkout@v4
+        uses: actions/checkout@v4.2.2
 
       - name: Fetch weather and write weather.json
         run: |
           python << 'PY'
           import json
           import urllib.request
+          from datetime import datetime
 
           LAT = 40.674400
           LON = -79.989082
@@ -69,6 +70,10 @@ jobs:
               }
               return mapping.get(code, "Unknown")
 
+          def short_day_label(date_str):
+              dt = datetime.strptime(date_str, "%Y-%m-%d")
+              return dt.strftime("%a")
+
           with urllib.request.urlopen(url, timeout=30) as r:
               data = json.load(r)
 
@@ -80,12 +85,6 @@ jobs:
               "desc": code_to_text(current["weather_code"]),
               "high": round(daily["temperature_2m_max"][0]),
               "low": round(daily["temperature_2m_min"][0]),
-              from datetime import datetime
-
-              def short_day_label(date_str):
-                  dt = datetime.strptime(date_str, "%Y-%m-%d")
-                  return dt.strftime("%a")
-              
               "days": [
                   {
                       "name": short_day_label(daily["time"][1]),
@@ -114,5 +113,9 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add weather.json
-          git diff --staged --quiet || git commit -m "Update weather data"
-          git push
+          if git diff --staged --quiet; then
+            echo "No weather changes to commit"
+          else
+            git commit -m "Update weather data"
+            git push
+          fi
