@@ -7,13 +7,13 @@
   "days": [
     {
       "name": "Mon",
-      "high": 58,
+      "high": 60,
       "low": 40
     },
     {
       "name": "Tue",
       "high": 62,
-      "low": 36
+      "low": 41
     },
     {
       "name": "Wed",
