@@ -8,7 +8,7 @@
     {
       "name": "Fri",
       "high": 65,
-      "low": 41
+      "low": 40
     },
     {
       "name": "Sat",
@@ -18,7 +18,7 @@
     {
       "name": "Sun",
       "high": 76,
-      "low": 59
+      "low": 60
     }
   ]
 }
