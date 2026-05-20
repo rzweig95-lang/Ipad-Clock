@@ -3,22 +3,22 @@
   "temp": 65,
   "desc": "Overcast",
   "high": 72,
-  "low": 53,
+  "low": 54,
   "days": [
     {
       "name": "Thu",
       "high": 66,
-      "low": 52
+      "low": 51
     },
     {
       "name": "Fri",
-      "high": 57,
-      "low": 50
+      "high": 58,
+      "low": 51
     },
     {
       "name": "Sat",
-      "high": 52,
-      "low": 50
+      "high": 58,
+      "low": 49
     }
   ]
 }
