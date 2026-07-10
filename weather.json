@@ -3,7 +3,7 @@
   "temp": 81,
   "desc": "Overcast",
   "high": 82,
-  "low": 72,
+  "low": 71,
   "days": [
     {
       "name": "Sat",
@@ -17,8 +17,8 @@
     },
     {
       "name": "Mon",
-      "high": 86,
-      "low": 59
+      "high": 88,
+      "low": 61
     }
   ]
 }
