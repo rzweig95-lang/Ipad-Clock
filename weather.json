@@ -3,7 +3,7 @@
   "temp": 67,
   "desc": "Clear sky",
   "high": 83,
-  "low": 64,
+  "low": 65,
   "days": [
     {
       "name": "Sun",
@@ -12,12 +12,12 @@
     },
     {
       "name": "Mon",
-      "high": 85,
-      "low": 62
+      "high": 86,
+      "low": 64
     },
     {
       "name": "Tue",
-      "high": 70,
+      "high": 86,
       "low": 65
     }
   ]
