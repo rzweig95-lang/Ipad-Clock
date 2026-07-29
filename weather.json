@@ -3,12 +3,12 @@
   "temp": 76,
   "desc": "Partly cloudy",
   "high": 76,
-  "low": 66,
+  "low": 65,
   "days": [
     {
       "name": "Thu",
       "high": 80,
-      "low": 58
+      "low": 57
     },
     {
       "name": "Fri",
