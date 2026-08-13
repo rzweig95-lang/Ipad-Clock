@@ -1,19 +1,19 @@
 {
   "location": "Valencia, PA",
-  "temp": 70,
+  "temp": 72,
   "desc": "Partly cloudy",
-  "high": 81,
+  "high": 80,
   "low": 66,
   "days": [
     {
       "name": "Fri",
-      "high": 76,
+      "high": 80,
       "low": 69
     },
     {
       "name": "Sat",
       "high": 86,
-      "low": 62
+      "low": 64
     },
     {
       "name": "Sun",
