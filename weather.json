@@ -7,18 +7,18 @@
   "days": [
     {
       "name": "Fri",
-      "high": 70,
+      "high": 71,
       "low": 48
     },
     {
       "name": "Sat",
-      "high": 49,
+      "high": 50,
       "low": 35
     },
     {
       "name": "Sun",
-      "high": 59,
-      "low": 33
+      "high": 58,
+      "low": 32
     }
   ]
 }
