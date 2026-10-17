@@ -12,12 +12,12 @@
     },
     {
       "name": "Mon",
-      "high": 63,
-      "low": 37
+      "high": 64,
+      "low": 38
     },
     {
       "name": "Tue",
-      "high": 64,
+      "high": 65,
       "low": 40
     }
   ]
