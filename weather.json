@@ -3,12 +3,12 @@
   "temp": 45,
   "desc": "Overcast",
   "high": 46,
-  "low": 39,
+  "low": 40,
   "days": [
     {
       "name": "Sun",
       "high": 54,
-      "low": 40
+      "low": 42
     },
     {
       "name": "Mon",
